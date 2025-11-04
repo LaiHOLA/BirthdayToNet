@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>To your 24 — all in bloom</title>
+  <meta name="description" content="A minimal, elegant countdown page that blooms at unlock time." />
+  <meta property="og:title" content="To your 24 — all in bloom" />
+  <meta property="og:description" content="Unlocks at 2025/11/11 00:00 (GMT+7)." />
+  <meta name="theme-color" content="#e9e4f0" />
+  <style>
+    :root{
+      --bg-a: #f7edf5; /* blush */
+      --bg-b: #e8f1ff; /* mist blue */
+      --bg-c: #eef8ef; /* dew green */
+      --ink: #2b2b2b;
+      --muted: #6b7280;
+      --accent: #b388eb; /* soft purple */
+      --accent-2: #ffb3c1; /* rose */
+      --accent-3: #9be7c4; /* mint */
+      --card: rgba(255,255,255,.55);
+      --blur: 14px;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0; color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Helvetica Neue, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, var(--bg-a), transparent 60%),
+                  radial-gradient(1000px 1000px at 80% 30%, var(--bg-b), transparent 60%),
+                  radial-gradient(1200px 800px at 40% 90%, var(--bg-c), transparent 60%),
+                  linear-gradient(120deg, var(--bg-a), var(--bg-b), var(--bg-c));
+      background-size: 140% 140%;
+      animation: bg-shift 18s ease-in-out infinite alternate;
+      overflow: hidden;
+    }
+    @keyframes bg-shift{from{background-position: 0% 0%, 100% 0%, 0% 100%, 0% 50%}to{background-position: 100% 100%, 0% 100%, 100% 0%, 100% 50%}}
+
+    .wrap{position:relative; height:100%; display:grid; place-items:center;}
+    .panel{
+      position:relative; z-index:3; max-width: 960px; width:min(92vw, 960px);
+      padding: clamp(16px, 3.5vw, 40px);
+      border-radius: 28px; background: var(--card);
+      box-shadow: 0 20px 50px rgba(0,0,0,.08), inset 0 0 1px rgba(255,255,255,.6);
+      backdrop-filter: blur(var(--blur)) saturate(1.2);
+    }
+
+    h1{ font-size: clamp(28px, 4.2vw, 54px); line-height:1.1; margin: 0 0 .35em; font-weight: 700; letter-spacing: .2px; }
+    .sub{ color: var(--muted); font-size: clamp(14px, 2.1vw, 18px); margin-bottom: 1.2rem; }
+
+    .countdown{ display:flex; gap: clamp(10px, 2vw, 18px); flex-wrap:wrap; }
+    .dd{ flex: 1 1 auto; min-width: 110px; text-align:center; padding: 14px 12px; border-radius: 16px; background: rgba(255,255,255,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 6px 18px rgba(0,0,0,.05); }
+    .num{ display:block; font-variant-numeric: tabular-nums; font-size: clamp(28px, 6vw, 56px); font-weight: 700; letter-spacing: .5px; }
+    .lab{ display:block; margin-top: 6px; color: var(--muted); letter-spacing: .5px; font-size: 12px; text-transform: uppercase; }
+
+    .cta{ margin-top: 20px; font-size: 13px; color: var(--muted); }
+
+    /* Floating phrases */
+    .float-layer{ position: fixed; inset: -5vh -5vw; pointer-events: none; z-index: 1; }
+    .phrase{ position:absolute; white-space:nowrap; font-size: clamp(12px, 1.6vw, 16px); color: #2b2b2b; opacity: .5;
+      mix-blend-mode: multiply; filter: drop-shadow(0 2px 3px rgba(0,0,0,.07));
+      animation: rise 14s linear forwards; will-change: transform, opacity;
+    }
+    @keyframes rise{ 0%{ transform: translate(var(--x,0), var(--y,0)) scale(.95) rotate(var(--rot,0deg)); opacity: var(--op,.4);} 85%{ opacity: var(--op,.4);} 100%{ transform: translate(calc(var(--x,0) + var(--dx,0px)), calc(var(--y,0) - 18vh)) scale(1) rotate(calc(var(--rot,0deg) + 6deg)); opacity: 0; } }
+
+    /* Unlock screen */
+    .reveal{ display:none; }
+    .reveal.active{ display:block; }
+    .line{ font-family: ui-serif, Georgia, "Songti SC", "Noto Serif SC", serif; font-size: clamp(28px, 5vw, 64px); line-height:1.15; font-weight: 700; letter-spacing: .5px; }
+    .line .en{ display:block; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; background-clip:text; color: transparent; }
+    .line .zh{ display:block; margin-top: .35em; color:#2a2a2a; }
+    .note{ margin-top: 12px; color: var(--muted); }
+
+    /* Garden bloom */
+    .garden{ position: fixed; inset:0; pointer-events:none; z-index:2; }
+    .flower{ position:absolute; width: 22px; height:22px; opacity:0; transform: translate(-50%, -50%) scale(.3) rotate(0deg); animation: bloom 1.4s ease forwards, drift 10s ease-in-out infinite alternate; }
+    @keyframes bloom{ to{ opacity:1; transform: translate(-50%, -50%) scale(1) rotate(360deg);} }
+    @keyframes drift{ 0%{ filter:hue-rotate(0deg); transform: translate(-50%, -50%) scale(1) translateY(0);} 100%{ filter:hue-rotate(12deg); transform: translate(-50%, -50%) scale(1.05) translateY(-6px);} }
+
+    .badge{ position:fixed; right:10px; bottom:10px; font-size: 12px; color:var(--muted); background: rgba(255,255,255,.55); padding:6px 10px; border-radius: 999px; backdrop-filter: blur(10px); z-index:10; }
+
+    @media (prefers-reduced-motion: reduce){
+      body{ animation:none; }
+      .phrase{ animation-duration: 0s; }
+      .flower{ animation: none; opacity:.9; }
+    }
+  </style>
+</head>
+<body>
+<div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+<div class="garden" id="garden" aria-hidden="true"></div>
+
+<div class="wrap">
+  <main class="panel" id="panel">
+    <h1 id="title">Countdown to 24</h1>
+    <p class="sub">Unlocks at <strong>2025/11/11 00:00 (GMT+7)</strong>. </p>
+
+    <section id="countdown" class="countdown" role="timer" aria-live="polite" aria-atomic="true">
+      <div class="dd"><span class="num" id="d">0</span><span class="lab">Days</span></div>
+      <div class="dd"><span class="num" id="h">0</span><span class="lab">Hours</span></div>
+      <div class="dd"><span class="num" id="m">0</span><span class="lab">Minutes</span></div>
+      <div class="dd"><span class="num" id="s">0</span><span class="lab">Seconds</span></div>
+    </section>
+
+    <p class="cta">Before unlock, Be soft</p>
+
+    <section id="reveal" class="reveal" aria-live="polite">
+      <div class="line">
+        <span class="en">To your 24, all in bloom;</span>
+        <span class="zh">敬二十四，皆是盛开。</span>
+      </div>
+      <p class="note">愿你的二十四岁，温柔且明亮。</p>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  // --- Configuration ---
+  // Unlock time: 2025-11-11 00:00 at GMT+7 == 2025-11-10 17:00:00Z
+  let unlockUTC = Date.parse('2025-11-10T17:00:00Z');
+  const params = new URLSearchParams(location.search);
+  if (params.get('unlock') === 'now') unlockUTC = Date.now();
+
+  const phrases = [
+    'Bloom softly; 花正好。',
+    'Be light and tender; 愿温柔且明亮。',
+    'Shine quiet, love loud; 温柔发光，热烈去爱。',
+    'Still pure, still brave; 仍纯仍勇。',
+    'May peace hug you; 愿安宁拥你。',
+    'Soft as moonlight; 柔如月光。',
+    'Be kind to yourself; 温柔以待。',
+    'Let the world be gentle to you; 愿世界温柔待你。',
+    'Quietly shining; 悄然闪光。',
+    'Walk your own rhythm; 走自己的节奏。',
+    'She blooms, she conquers; 她盛放，她自成光。',
+    'No rush, no pause; 不慌不忙。',
+    'Her life, her rules; 她的生活，她的世界。',
+    'Grace in every step; 步步生花。'
+  ];
+
+  const floatLayer = document.getElementById('floatLayer');
+  const garden = document.getElementById('garden');
+  const dEl = document.getElementById('d');
+  const hEl = document.getElementById('h');
+  const mEl = document.getElementById('m');
+  const sEl = document.getElementById('s');
+  const countdown = document.getElementById('countdown');
+  const reveal = document.getElementById('reveal');
+
+  // --- Countdown ---
+  function updateCountdown(){
+    const now = Date.now();
+    let diff = Math.max(0, unlockUTC - now);
+    const days = Math.floor(diff / 86400000); diff -= days * 86400000;
+    const hours = Math.floor(diff / 3600000); diff -= hours * 3600000;
+    const mins = Math.floor(diff / 60000); diff -= mins * 60000;
+    const secs = Math.floor(diff / 1000);
+
+    dEl.textContent = String(days);
+    hEl.textContent = String(hours).padStart(2, '0');
+    mEl.textContent = String(mins).padStart(2, '0');
+    sEl.textContent = String(secs).padStart(2, '0');
+
+    if (now >= unlockUTC) doReveal();
+  }
+
+  let countdownTimer = setInterval(updateCountdown, 1000);
+  updateCountdown();
+
+  // --- Floating phrases ---
+  let floatCount = 0; const MAX_FLOAT = 26;
+  function spawnPhrase(){
+    if (reveal.classList.contains('active')) return;
+
+    const el = document.createElement('div');
+    el.className = 'phrase';
+    el.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    const x = Math.random() * vw * 0.85; // leave a margin
+    const y = vh + (Math.random() * 80 + 10); // start below view
+    const dx = (Math.random() * 80) - 40; // slight sideways
+    const rot = (Math.random() * 10 - 5).toFixed(2) + 'deg';
+    const op = (Math.random() * 0.55 + 0.25).toFixed(2);
+
+    el.style.setProperty('--x', x + 'px');
+    el.style.setProperty('--y', y + 'px');
+    el.style.setProperty('--dx', dx + 'px');
+    el.style.setProperty('--rot', rot);
+    el.style.setProperty('--op', op);
+
+    floatLayer.appendChild(el);
+    el.addEventListener('animationend', ()=>{ el.remove(); floatCount = Math.max(0, floatCount - 1); });
+
+    floatCount++;
+    if (floatCount > MAX_FLOAT){
+      // remove the earliest one to keep the scene light
+      const first = floatLayer.querySelector('.phrase');
+      if (first) { first.remove(); floatCount--; }
+    }
+  }
+  const floatTimer = setInterval(spawnPhrase, 700);
+
+  // --- Reveal ---
+  let revealed = false;
+  function doReveal(){
+    if (revealed) return; revealed = true;
+    clearInterval(countdownTimer);
+    clearInterval(floatTimer);
+    countdown.style.display = 'none';
+    reveal.classList.add('active');
+    document.getElementById('title').textContent = 'To your 24 — all in bloom';
+    spawnGarden();
+  }
+
+  // --- Garden bloom (SVG flowers) ---
+  function createFlower(x, y, hue){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    el.setAttribute('class', 'flower');
+    el.setAttribute('viewBox', '0 0 100 100');
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('transform', 'translate(50,50)');
+
+    // 6 petals
+    for (let i=0;i<6;i++){
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      p.setAttribute('cx', '0'); p.setAttribute('cy', '24'); p.setAttribute('rx', '12'); p.setAttribute('ry', '22');
+      p.setAttribute('fill', `hsl(${hue + i*6}, 60%, 75%)`);
+      p.setAttribute('opacity', '0.95');
+      p.setAttribute('transform', `rotate(${i*60})`);
+      g.appendChild(p);
+    }
+    // center
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx','0'); c.setAttribute('cy','0'); c.setAttribute('r','10');
+    c.setAttribute('fill', `hsl(${hue}, 70%, 60%)`);
+    c.setAttribute('opacity','0.95');
+
+    el.appendChild(g); el.appendChild(c);
+    return el;
+  }
+
+  function spawnGarden(){
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    const N = Math.round((vw*vh) / 25000); // density based on viewport
+    for (let i=0;i<N;i++){
+      const x = Math.random() * vw * 0.95 + vw*0.025;
+      const y = Math.random() * vh * 0.8 + vh*0.1;
+      const hue = Math.floor(Math.random()*30 + 320); // gentle magenta range
+      const f = createFlower(x,y,hue);
+      garden.appendChild(f);
+    }
+  }
+})();
+</script>
+</body>
+</html>
